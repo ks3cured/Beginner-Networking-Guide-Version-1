@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Beginner Networking Guide — @ks3cured</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #080c10;
+    --bg2: #0d1117;
+    --bg3: #111820;
+    --border: #1e3a2f;
+    --green: #00ff88;
+    --green-dim: #00cc6a;
+    --green-muted: #1a4d35;
+    --cyan: #00e5ff;
+    --cyan-dim: #00b8cc;
+    --pink: #ff4d8f;
+    --yellow: #ffd166;
+    --text: #c8d8c0;
+    --text-dim: #5a7a60;
+    --font-mono: 'IBM Plex Mono', monospace;
+    --font-display: 'Orbitron', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 14px;
+    line-height: 1.7;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* scanline overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,255,136,0.015) 2px,
+      rgba(0,255,136,0.015) 4px
+    );
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* grid bg */
+  body::after {
+    content: '';
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background-image:
+      linear-gradient(rgba(0,255,136,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,255,136,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 24px 80px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    padding: 60px 0 48px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 60px;
+  }
+
+  .hero-tag {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--green);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    opacity: 0.8;
+  }
+
+  .hero-tag::before { content: '> '; }
+
+  .hero h1 {
+    font-family: var(--font-display);
+    font-size: clamp(28px, 5vw, 52px);
+    font-weight: 900;
+    color: #fff;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    margin-bottom: 12px;
+  }
+
+  .hero h1 span {
+    color: var(--green);
+    text-shadow: 0 0 30px rgba(0,255,136,0.4);
+  }
+
+  .hero-sub {
+    font-size: 13px;
+    color: var(--text-dim);
+    max-width: 520px;
+    margin-bottom: 24px;
+  }
+
+  .hero-meta {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 0.1em;
+  }
+
+  .hero-meta span { color: var(--green); }
+
+  /* ── TOC ── */
+  .toc {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--green);
+    padding: 28px 32px;
+    margin-bottom: 60px;
+  }
+
+  .toc-title {
+    font-family: var(--font-display);
+    font-size: 11px;
+    color: var(--green);
+    letter-spacing: 0.2em;
+    margin-bottom: 16px;
+  }
+
+  .toc ol {
+    list-style: none;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px 40px;
+  }
+
+  @media (max-width: 600px) { .toc ol { grid-template-columns: 1fr; } }
+
+  .toc li { counter-increment: toc-counter; }
+
+  .toc a {
+    color: var(--text);
+    text-decoration: none;
+    font-size: 12px;
+    transition: color 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .toc a::before {
+    content: counter(toc-counter, decimal-leading-zero) '.';
+    color: var(--green-dim);
+    font-size: 10px;
+    min-width: 24px;
+  }
+
+  .toc a:hover { color: var(--green); }
+
+  /* ── SECTION ── */
+  section {
+    margin-bottom: 64px;
+    scroll-margin-top: 24px;
+  }
+
+  .section-label {
+    font-size: 10px;
+    color: var(--green);
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    opacity: 0.7;
+  }
+
+  .section-label::before { content: '// '; }
+
+  h2 {
+    font-family: var(--font-display);
+    font-size: clamp(18px, 3vw, 26px);
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  h3 {
+    font-family: var(--font-display);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--cyan);
+    margin: 28px 0 10px;
+    letter-spacing: 0.05em;
+  }
+
+  p { color: var(--text); margin-bottom: 12px; font-size: 13.5px; }
+
+  strong { color: var(--green); font-weight: 600; }
+
+  /* ── CALLOUT BOX ── */
+  .callout {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--cyan);
+    padding: 16px 20px;
+    margin: 16px 0;
+    font-size: 13px;
+  }
+
+  .callout.warn { border-left-color: var(--pink); }
+  .callout.tip  { border-left-color: var(--yellow); }
+
+  .callout-label {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    color: var(--cyan);
+  }
+
+  .callout.warn .callout-label { color: var(--pink); }
+  .callout.tip  .callout-label { color: var(--yellow); }
+
+  /* ── OSI TABLE ── */
+  .osi-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    font-size: 12.5px;
+  }
+
+  .osi-table thead tr {
+    background: var(--green-muted);
+  }
+
+  .osi-table th {
+    padding: 10px 14px;
+    text-align: left;
+    font-family: var(--font-display);
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    color: var(--green);
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  .osi-table td {
+    padding: 11px 14px;
+    border-bottom: 1px solid rgba(30,58,47,0.6);
+    vertical-align: top;
+  }
+
+  .osi-table tbody tr:hover {
+    background: rgba(0,255,136,0.03);
+  }
+
+  .layer-num {
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 900;
+    color: var(--border);
+    min-width: 36px;
+    display: inline-block;
+  }
+
+  .layer-physical  .layer-num { color: #ff4d4d; }
+  .layer-datalink  .layer-num { color: #ff914d; }
+  .layer-network   .layer-num { color: #ffd166; }
+  .layer-transport .layer-num { color: #a8ff78; }
+  .layer-session   .layer-num { color: #00ff88; }
+  .layer-present   .layer-num { color: #00e5ff; }
+  .layer-app       .layer-num { color: #a78bfa; }
+
+  .layer-name {
+    font-weight: 600;
+    display: block;
+    margin-bottom: 2px;
+    color: #fff;
+  }
+
+  .layer-physical  .layer-name { color: #ff6b6b; }
+  .layer-network   .layer-name { color: var(--green); }
+  .layer-transport .layer-name { color: var(--green); }
+  .layer-present   .layer-name { color: var(--green); }
+  .layer-app       .layer-name { color: var(--green); }
+
+  .layer-tag {
+    display: inline-block;
+    font-size: 10px;
+    padding: 2px 7px;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    letter-spacing: 0.1em;
+  }
+
+  .example-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+
+  .chip {
+    font-size: 10px;
+    padding: 2px 8px;
+    background: var(--green-muted);
+    color: var(--green);
+    border: 1px solid rgba(0,255,136,0.2);
+    letter-spacing: 0.05em;
+  }
+
+  .chip.cyan {
+    background: rgba(0,229,255,0.08);
+    color: var(--cyan);
+    border-color: rgba(0,229,255,0.2);
+  }
+
+  /* ── PORT TABLE ── */
+  .port-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5px;
+    margin: 20px 0;
+  }
+
+  .port-table th {
+    background: rgba(0,229,255,0.08);
+    padding: 10px 14px;
+    text-align: left;
+    font-family: var(--font-display);
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    color: var(--cyan);
+    text-transform: uppercase;
+  }
+
+  .port-table td {
+    padding: 9px 14px;
+    border-bottom: 1px solid rgba(30,58,47,0.5);
+  }
+
+  .port-table tbody tr:hover { background: rgba(0,229,255,0.03); }
+
+  .port-num {
+    font-family: var(--font-display);
+    font-weight: 700;
+    color: var(--cyan);
+    font-size: 13px;
+  }
+
+  .badge {
+    display: inline-block;
+    font-size: 10px;
+    padding: 2px 7px;
+    letter-spacing: 0.08em;
+  }
+
+  .badge-server { background: rgba(0,255,136,0.1); color: var(--green); }
+  .badge-client { background: rgba(255,77,143,0.1); color: var(--pink); }
+  .badge-both   { background: rgba(255,209,102,0.1); color: var(--yellow); }
+
+  /* ── TCP/UDP compare ── */
+  .compare-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 20px 0;
+  }
+
+  @media (max-width: 600px) { .compare-grid { grid-template-columns: 1fr; } }
+
+  .compare-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    padding: 20px;
+  }
+
+  .compare-card.tcp { border-top: 3px solid var(--green); }
+  .compare-card.udp { border-top: 3px solid var(--pink); }
+
+  .compare-card h4 {
+    font-family: var(--font-display);
+    font-size: 14px;
+    font-weight: 900;
+    margin-bottom: 4px;
+  }
+
+  .compare-card.tcp h4 { color: var(--green); }
+  .compare-card.udp h4 { color: var(--pink); }
+
+  .compare-card .sub {
+    font-size: 10px;
+    color: var(--text-dim);
+    margin-bottom: 14px;
+    letter-spacing: 0.05em;
+  }
+
+  .compare-card ul {
+    list-style: none;
+    font-size: 12.5px;
+  }
+
+  .compare-card ul li {
+    padding: 4px 0;
+    border-bottom: 1px solid rgba(30,58,47,0.4);
+    color: var(--text);
+  }
+
+  .compare-card ul li::before {
+    content: '→ ';
+    color: var(--text-dim);
+  }
+
+  /* ── handshake ── */
+  .handshake {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    margin: 24px 0;
+    flex-wrap: wrap;
+  }
+
+  .hs-step {
+    text-align: center;
+    padding: 14px 20px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    min-width: 100px;
+  }
+
+  .hs-arrow {
+    font-size: 20px;
+    color: var(--green);
+    padding: 0 6px;
+  }
+
+  .hs-label {
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: 15px;
+    color: var(--green);
+  }
+
+  .hs-desc {
+    font-size: 10px;
+    color: var(--text-dim);
+    margin-top: 4px;
+    letter-spacing: 0.05em;
+  }
+
+  /* ── IPv4 vs IPv6 ── */
+  .ip-compare {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 20px 0;
+  }
+
+  @media (max-width: 600px) { .ip-compare { grid-template-columns: 1fr; } }
+
+  .ip-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    padding: 20px;
+  }
+
+  .ip-card h4 {
+    font-family: var(--font-display);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--yellow);
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .ip-card p { font-size: 12.5px; margin-bottom: 8px; }
+
+  .ip-example {
+    display: inline-block;
+    font-size: 11px;
+    padding: 6px 12px;
+    background: rgba(255,209,102,0.07);
+    border: 1px solid rgba(255,209,102,0.2);
+    color: var(--yellow);
+    margin-top: 8px;
+    word-break: break-all;
+  }
+
+  /* ── devices ── */
+  .device-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+    margin: 20px 0;
+  }
+
+  .device-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    padding: 20px;
+  }
+
+  .device-icon {
+    font-size: 24px;
+    margin-bottom: 8px;
+  }
+
+  .device-card h4 {
+    font-family: var(--font-display);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--green);
+    margin-bottom: 8px;
+  }
+
+  .device-card p { font-size: 12px; color: var(--text); }
+
+  /* ── attack highlight ── */
+  .attack-list {
+    list-style: none;
+    margin: 12px 0;
+  }
+
+  .attack-list li {
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(30,58,47,0.4);
+    font-size: 13px;
+    display: flex;
+    gap: 12px;
+  }
+
+  .attack-tag {
+    min-width: 90px;
+    font-family: var(--font-display);
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--pink);
+    padding: 2px 0;
+    letter-spacing: 0.05em;
+  }
+
+  /* ── footer ── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 32px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .footer-brand {
+    font-family: var(--font-display);
+    font-weight: 900;
+    color: var(--green);
+    font-size: 14px;
+  }
+
+  footer p { font-size: 11px; color: var(--text-dim); margin: 0; }
+
+  /* ── animations ── */
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+
+  .cursor::after {
+    content: '_';
+    color: var(--green);
+    animation: blink 1s step-end infinite;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  section {
+    animation: fadeUp 0.5s ease both;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- HERO -->
+  <header class="hero">
+    <div class="hero-tag">ks3cured</div>
+    <h1>Beginner <span>Networking</span><br>Concepts<span class="cursor"></span></h1>
+    <p class="hero-sub">Everything you need to understand how data actually moves across networks — from cables to applications.</p>
+    <div class="hero-meta">
+      <div>By <span>@ks3cured</span></div>
+      <div>Sections: <span>10</span></div>
+    </div>
+  </header>
+
+  <!-- TOC -->
+  <nav class="toc">
+    <div class="toc-title">// Table of Contents</div>
+    <ol>
+      <li><a href="#s1">What is Networking?</a></li>
+      <li><a href="#s2">How the Internet Works</a></li>
+      <li><a href="#s3">IPv4 vs IPv6</a></li>
+      <li><a href="#s4">TCP vs UDP</a></li>
+      <li><a href="#s5">The OSI Model</a></li>
+      <li><a href="#s6">Ports & Protocols</a></li>
+      <li><a href="#s7">Router vs Modem vs Switch</a></li>
+      <li><a href="#s8">DNS — The Internet's Phone Book</a></li>
+      <li><a href="#s9">DHCP — Auto IP Assignment</a></li>
+      <li><a href="#s10">Why This Matters for Security</a></li>
+    </ol>
+  </nav>
+
+  <!-- SECTION 1 -->
+  <section id="s1">
+    <div class="section-label">01 — foundations</div>
+    <h2>What is Networking?</h2>
+    <p>A <strong>network</strong> is two or more devices connected together so they can share data. That could be two computers in the same room, your phone talking to a web server across the world, or millions of devices all connected through the internet.</p>
+    <p>Networking is the foundation of everything in cybersecurity. You can't defend what you don't understand — and almost every attack involves the network in some way.</p>
+    <div class="callout">
+      <div class="callout-label">Key Concept</div>
+      The internet is just a massive network of networks. Your home network connects to your ISP's network, which connects to other ISPs, which eventually reaches any server on the planet.
+    </div>
+    <h3>Types of Networks</h3>
+    <p><strong>LAN (Local Area Network)</strong> — A network within a small area like your home or office. Devices on the same LAN can talk to each other directly.</p>
+    <p><strong>WAN (Wide Area Network)</strong> — A network that spans large distances. The internet is the largest WAN. Your ISP connects your LAN to the WAN.</p>
+    <p><strong>WLAN (Wireless LAN)</strong> — A LAN that uses Wi-Fi instead of cables. Same idea, no wires.</p>
+  </section>
+
+  <!-- SECTION 2 -->
+  <section id="s2">
+    <div class="section-label">02 — fundamentals</div>
+    <h2>How the Internet Works</h2>
+    <p>When you visit a website, a lot happens in milliseconds. Your device needs to find the server, establish a connection, request data, and receive it — all reliably and in the right order.</p>
+    <p>Data doesn't travel as one big chunk. It gets broken into small pieces called <strong>packets</strong>. Each packet is sent independently across the network and reassembled at the destination. This is why your download can keep going even if one path is congested — packets can take different routes.</p>
+    <div class="callout tip">
+      <div class="callout-label">Analogy</div>
+      Think of sending a book in the mail. Instead of one massive package, you send each chapter separately. They might arrive out of order — but as long as you number them, you can reassemble the book on the other end.
+    </div>
+  </section>
+
+  <!-- SECTION 3 -->
+  <section id="s3">
+    <div class="section-label">03 — addressing</div>
+    <h2>IPv4 vs IPv6</h2>
+    <p>Every device on a network needs an address so data knows where to go. That's what an <strong>IP address</strong> is — an Internet Protocol address. There are two versions in use today.</p>
+    <div class="ip-compare">
+      <div class="ip-card">
+        <h4>IPv4 — The Original</h4>
+        <p><strong>32-bit address</strong> — written as 4 numbers separated by dots, each from 0–255.</p>
+        <p>Supports about <strong>4.3 billion</strong> unique addresses. That sounds like a lot — but we ran out. Every device needs an IP, and there are way more than 4.3 billion devices now.</p>
+        <p>Still the most common version you'll see today.</p>
+        <div class="ip-example">192.168.1.1</div>
+      </div>
+      <div class="ip-card">
+        <h4>IPv6 — The Future</h4>
+        <p><strong>128-bit address</strong> — written as 8 groups of 4 hex digits separated by colons.</p>
+        <p>Supports <strong>340 undecillion</strong> addresses (that's 340 followed by 36 zeros). We won't run out.</p>
+        <p>Also has built-in improvements: better security, no need for NAT, auto-configuration.</p>
+        <div class="ip-example">2001:0db8:85a3:0000:0000:8a2e:0370:7334</div>
+      </div>
+    </div>
+    <div class="callout">
+      <div class="callout-label">Quick Note</div>
+      <strong>192.168.x.x</strong> and <strong>10.x.x.x</strong> are private IP ranges — they only exist inside a local network. Your router handles translating these to your public IP when traffic goes to the internet. This is called <strong>NAT</strong> (Network Address Translation).
+    </div>
+  </section>
+
+  <!-- SECTION 4 -->
+  <section id="s4">
+    <div class="section-label">04 — transport</div>
+    <h2>TCP vs UDP</h2>
+    <p>Both are <strong>Layer 4 (Transport Layer)</strong> protocols that define how data is sent between devices. They take very different approaches.</p>
+    <div class="compare-grid">
+      <div class="compare-card tcp">
+        <h4>TCP</h4>
+        <div class="sub">Transmission Control Protocol</div>
+        <ul>
+          <li>Connection-oriented</li>
+          <li>Guarantees delivery</li>
+          <li>Data arrives in order</li>
+          <li>Has error checking</li>
+          <li>Slower — more overhead</li>
+          <li>Uses: HTTP, SSH, FTP, email</li>
+        </ul>
+      </div>
+      <div class="compare-card udp">
+        <h4>UDP</h4>
+        <div class="sub">User Datagram Protocol</div>
+        <ul>
+          <li>Connectionless</li>
+          <li>No delivery guarantee</li>
+          <li>Packets may arrive out of order</li>
+          <li>Minimal error checking</li>
+          <li>Faster — low overhead</li>
+          <li>Uses: DNS, video streaming, gaming</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3>The TCP 3-Way Handshake</h3>
+    <p>Before TCP can send any data, it establishes a connection through a 3-way handshake. This is one of the most important things to understand for security — it's where a lot of attacks happen.</p>
+    <div class="handshake">
+      <div class="hs-step">
+        <div class="hs-label">SYN</div>
+        <div class="hs-desc">Client → Server<br>"Hey, can we connect?"</div>
+      </div>
+      <div class="hs-arrow">→</div>
+      <div class="hs-step">
+        <div class="hs-label">SYN-ACK</div>
+        <div class="hs-desc">Server → Client<br>"Yes, I acknowledge"</div>
+      </div>
+      <div class="hs-arrow">→</div>
+      <div class="hs-step">
+        <div class="hs-label">ACK</div>
+        <div class="hs-desc">Client → Server<br>"Got it. Let's go."</div>
+      </div>
+    </div>
+    <p><strong>SYN</strong> = Start a connection &nbsp;|&nbsp; <strong>ACK</strong> = Acknowledge data was received &nbsp;|&nbsp; <strong>FIN</strong> = Close the connection</p>
+
+    <h3>UDP Packet Structure</h3>
+    <p>UDP packets are intentionally simple — just 4 fields: <strong>Source Port</strong>, <strong>Destination Port</strong>, <strong>Length</strong>, and <strong>Checksum</strong>. That's it. No sequence numbers, no ACKs. Speed over reliability.</p>
+
+    <div class="callout warn">
+      <div class="callout-label">Security Note</div>
+      Attackers can exploit TCP's handshake in several ways. A <strong>SYN Flood</strong> sends thousands of SYN packets with no ACK — overwhelming a server with half-open connections. An <strong>RST Flood</strong> sends reset packets to forcibly close connections. A <strong>FIN Scan</strong> uses FIN packets to stealthily probe for open ports without completing a handshake. You can spot forged TCP sessions in Wireshark by watching sequence/ACK numbers — attackers have to guess or spoof them.
+    </div>
+  </section>
+
+  <!-- SECTION 5 -->
+  <section id="s5">
+    <div class="section-label">05 — architecture</div>
+    <h2>The OSI Model</h2>
+    <p>The <strong>OSI Model</strong> (Open Systems Interconnection) is essentially a blueprint for how computers talk to each other over a network. It breaks the process into <strong>7 layers</strong>, each with a specific job.</p>
+    <div class="callout tip">
+      <div class="callout-label">How to Remember the Layers</div>
+      Top-down (Sending): <strong>All People Seem To Need Data Processing</strong><br>
+      Bottom-up (Receiving): <strong>Please Do Not Throw Sausage Pizza Away</strong>
+    </div>
+    <p>When you <strong>send</strong> data it starts at Layer 7 (Application) and works down to Layer 1. When you <strong>receive</strong> data it starts at Layer 1 (Physical) and works up to Layer 7.</p>
+
+    <table class="osi-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Layer</th>
+          <th>Simple Description</th>
+          <th>What it Does</th>
+          <th>Examples</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="layer-app">
+          <td><span class="layer-num">7</span></td>
+          <td><span class="layer-name">Application</span><span class="layer-tag">TOP</span></td>
+          <td>Where humans & software interact</td>
+          <td>Services like email, file transfers, web browsers</td>
+          <td><div class="example-chips"><span class="chip">HTTP/HTTPS</span><span class="chip">FTP</span><span class="chip">DNS</span><span class="chip">SMTP</span></div></td>
+        </tr>
+        <tr class="layer-present">
+          <td><span class="layer-num">6</span></td>
+          <td><span class="layer-name">Presentation</span><span class="layer-tag">TRANSLATOR</span></td>
+          <td>Translates data formats</td>
+          <td>Converts formats so both sides understand — handles encoding, encryption, compression</td>
+          <td><div class="example-chips"><span class="chip">JPEG</span><span class="chip">SSL/TLS</span><span class="chip">ASCII</span></div></td>
+        </tr>
+        <tr class="layer-session">
+          <td><span class="layer-num">5</span></td>
+          <td><span class="layer-name">Session</span><span class="layer-tag">CONVERSATION MGR</span></td>
+          <td>Manages ongoing connections</td>
+          <td>Opens, maintains, and closes sessions ("conversations") between devices</td>
+          <td><div class="example-chips"><span class="chip">Session tokens</span><span class="chip">API Sessions</span></div></td>
+        </tr>
+        <tr class="layer-transport">
+          <td><span class="layer-num">4</span></td>
+          <td><span class="layer-name">Transport</span><span class="layer-tag">DELIVERY CONTROL</span></td>
+          <td>Splits data & ensures it arrives</td>
+          <td>Segments data, controls flow, handles errors and retransmission</td>
+          <td><div class="example-chips"><span class="chip">TCP</span><span class="chip">UDP</span><span class="chip">Ports</span></div></td>
+        </tr>
+        <tr class="layer-network">
+          <td><span class="layer-num">3</span></td>
+          <td><span class="layer-name">Network</span><span class="layer-tag">ADDRESSING & ROUTING</span></td>
+          <td>Routes across different networks</td>
+          <td>Assigns IP addresses, finds the best path between networks</td>
+          <td><div class="example-chips"><span class="chip">IP</span><span class="chip">Routers</span><span class="chip">ICMP</span></div></td>
+        </tr>
+        <tr class="layer-datalink">
+          <td><span class="layer-num">2</span></td>
+          <td><span class="layer-name">Data Link</span><span class="layer-tag">LOCAL DELIVERY</span></td>
+          <td>Handles local delivery</td>
+          <td>Deals with delivery between devices on the <em>same</em> network using MAC addresses</td>
+          <td><div class="example-chips"><span class="chip">Ethernet</span><span class="chip">MAC Address</span><span class="chip">Switches</span></div></td>
+        </tr>
+        <tr class="layer-physical">
+          <td><span class="layer-num">1</span></td>
+          <td><span class="layer-name">Physical</span><span class="layer-tag">HARDWARE</span></td>
+          <td>Transmits raw bits</td>
+          <td>Sends data as electrical signals, light, or radio waves (actual 1s and 0s)</td>
+          <td><div class="example-chips"><span class="chip">Cables</span><span class="chip">Fiber</span><span class="chip">Radio waves</span><span class="chip">NIC</span></div></td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- SECTION 6 -->
+  <section id="s6">
+    <div class="section-label">06 — ports & protocols</div>
+    <h2>Ports & Protocols</h2>
+    <p>An IP address gets data to the right <em>device</em> — but a <strong>port number</strong> tells that device which <em>application</em> should handle it. Think of an IP address as a building address, and a port as the specific apartment number inside.</p>
+    <p>Ports 0–1023 are <strong>well-known ports</strong> reserved for specific protocols. Ports 1024–49151 are <strong>registered ports</strong>. Ports 49152–65535 are <strong>dynamic/ephemeral</strong> — used temporarily by clients.</p>
+    <table class="port-table">
+      <thead>
+        <tr>
+          <th>Port</th>
+          <th>Protocol</th>
+          <th>Main Use</th>
+          <th>Side</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td class="port-num">20</td><td>FTP (Data)</td><td>Transfers file data</td><td><span class="badge badge-server">Server</span></td></tr>
+        <tr><td class="port-num">21</td><td>FTP (Control)</td><td>FTP commands & login</td><td><span class="badge badge-server">Server</span></td></tr>
+        <tr><td class="port-num">22</td><td>SSH</td><td>Secure remote login</td><td><span class="badge badge-server">Server</span></td></tr>
+        <tr><td class="port-num">23</td><td>Telnet</td><td>Remote login (insecure — avoid)</td><td><span class="badge badge-server">Server</span></td></tr>
+        <tr><td class="port-num">25</td><td>SMTP</td><td>Sending email</td><td><span class="badge badge-both">Server→Server</span></td></tr>
+        <tr><td class="port-num">53</td><td>DNS</td><td>Domain Name System lookups</td><td><span class="badge badge-both">Both</span></td></tr>
+        <tr><td class="port-num">67</td><td>DHCP</td><td>Assigns IP addresses</td><td><span class="badge badge-server">Server</span></td></tr>
+        <tr><td class="port-num">68</td><td>DHCP</td><td>Requests IP addresses</td><td><span class="badge badge-client">Client</span></td></tr>
+        <tr><td class="port-num">69</td><td>TFTP</td><td>Simple file transfer (no auth)</td><td><span class="badge badge-server">Server</span></td></tr>
+        <tr><td class="port-num">80</td><td>HTTP</td><td>Web traffic (unencrypted)</td><td><span class="badge badge-server">Server</span></td></tr>
+        <tr><td class="port-num">110</td><td>POP3</td><td>Receive/download email</td><td><span class="badge badge-server">Server</span></td></tr>
+        <tr><td class="port-num">119</td><td>NNTP</td><td>Network news</td><td><span class="badge badge-server">Server</span></td></tr>
+        <tr><td class="port-num">123</td><td>NTP</td><td>Time synchronization</td><td><span class="badge badge-both">Both</span></td></tr>
+        <tr><td class="port-num">179</td><td>BGP</td><td>Routing between networks (internet backbone)</td><td><span class="badge badge-both">Both</span></td></tr>
+        <tr><td class="port-num">443</td><td>HTTPS</td><td>Secure web traffic (TLS encrypted)</td><td><span class="badge badge-server">Server</span></td></tr>
+      </tbody>
+    </table>
+    <div class="callout warn">
+      <div class="callout-label">Security Tip</div>
+      In a pentest or security assessment, open ports are your entry points. Tools like <strong>nmap</strong> scan for open ports to map attack surface. If you see port 23 (Telnet) open in the wild — that's a red flag. Always look for services running on non-standard ports too.
+    </div>
+  </section>
+
+  <!-- SECTION 7 -->
+  <section id="s7">
+    <div class="section-label">07 — hardware</div>
+    <h2>Router vs Modem vs Switch</h2>
+    <p>These three devices are often confused — or combined into one box by your ISP. Here's what each one actually does.</p>
+    <div class="device-grid">
+      <div class="device-card">
+        <div class="device-icon">📡</div>
+        <h4>Modem</h4>
+        <p>Connects your home to your ISP (the internet). Converts your ISP's signal (coaxial, fiber, DSL) into something your network can use. Without it, you can't reach the internet at all.</p>
+      </div>
+      <div class="device-card">
+        <div class="device-icon">🔀</div>
+        <h4>Router</h4>
+        <p>Manages traffic between your devices and the internet. Assigns private IPs via DHCP, handles NAT, provides firewall functionality, and creates your local network. Operates at <strong>Layer 3</strong>.</p>
+      </div>
+      <div class="device-card">
+        <div class="device-icon">🔌</div>
+        <h4>Switch</h4>
+        <p>Connects multiple wired devices within the same local network. Smarter than a hub — it learns MAC addresses and sends data only to the correct device. Operates at <strong>Layer 2</strong>.</p>
+      </div>
+      <div class="device-card">
+        <div class="device-icon">📶</div>
+        <h4>Access Point (AP)</h4>
+        <p>Extends Wi-Fi coverage. Creates a wireless network and connects it back to the wired infrastructure. Often built into your home router, but can be separate in enterprise setups.</p>
+      </div>
+    </div>
+    <div class="callout">
+      <div class="callout-label">Real Talk</div>
+      Your home "router" is almost always a modem + router + switch + AP all in one box. ISPs combine them for simplicity. In enterprise networks they're always separate devices.
+    </div>
+  </section>
+
+  <!-- SECTION 8 -->
+  <section id="s8">
+    <div class="section-label">08 — name resolution</div>
+    <h2>DNS — The Internet's Phone Book</h2>
+    <p>Computers communicate using IP addresses. But humans can't remember <code style="color:var(--cyan);background:rgba(0,229,255,0.07);padding:1px 6px;">142.250.80.46</code> — we remember <code style="color:var(--cyan);background:rgba(0,229,255,0.07);padding:1px 6px;">google.com</code>. <strong>DNS (Domain Name System)</strong> is what translates between the two.</p>
+    <p>When you type a URL, your device sends a DNS query (on <strong>port 53</strong>) asking "what's the IP for this domain?" A DNS server responds with the IP, and then your browser connects.</p>
+    <div class="callout warn">
+      <div class="callout-label">Security Note</div>
+      DNS is a major attack vector. <strong>DNS Spoofing / Cache Poisoning</strong> tricks a resolver into returning a fake IP, redirecting you to a malicious server. <strong>DNS tunneling</strong> uses DNS queries to smuggle data past firewalls. Always monitor DNS traffic in your environment.
+    </div>
+  </section>
+
+  <!-- SECTION 9 -->
+  <section id="s9">
+    <div class="section-label">09 — ip assignment</div>
+    <h2>DHCP — Auto IP Assignment</h2>
+    <p>Every time your phone connects to Wi-Fi, it gets an IP address automatically. That's <strong>DHCP (Dynamic Host Configuration Protocol)</strong> at work.</p>
+    <p>The process is called <strong>DORA</strong>: <strong>D</strong>iscover → <strong>O</strong>ffer → <strong>R</strong>equest → <strong>A</strong>cknowledge. Your device broadcasts "anyone have an IP for me?" — the DHCP server (usually your router) responds with an offer — your device requests it — the server confirms.</p>
+    <p>DHCP runs on <strong>port 67</strong> (server) and <strong>port 68</strong> (client). It also hands out the <strong>subnet mask</strong>, <strong>default gateway</strong>, and <strong>DNS server</strong> — everything a device needs to get online.</p>
+    <div class="callout warn">
+      <div class="callout-label">Attack Surface</div>
+      A <strong>Rogue DHCP server</strong> can intercept this process and hand out fake gateway/DNS info — redirecting all your traffic through an attacker's machine. This is a man-in-the-middle technique used in internal network attacks.
+    </div>
+  </section>
+
+  <!-- SECTION 10 -->
+  <section id="s10">
+    <div class="section-label">10 — security context</div>
+    <h2>Why This Matters for Security</h2>
+    <p>Every concept in this guide directly maps to real-world attacks and defenses. Networking isn't just background knowledge — it <em>is</em> security.</p>
+    <ul class="attack-list">
+      <li><span class="attack-tag">SYN FLOOD</span><span>Exploit TCP handshake — flood server with SYN packets, never send ACK. Server runs out of resources waiting for connections that never complete.</span></li>
+      <li><span class="attack-tag">PORT SCAN</span><span>Use tools like nmap to discover open ports and services. FIN scans are stealthy — send FIN without a handshake to probe silently.</span></li>
+      <li><span class="attack-tag">ARP SPOOFING</span><span>At Layer 2, poison ARP tables to associate your MAC with someone else's IP. Classic man-in-the-middle on local networks.</span></li>
+      <li><span class="attack-tag">DNS HIJACK</span><span>Intercept or poison DNS responses to redirect traffic to malicious servers. Works at Layer 7 but the impact is system-wide.</span></li>
+      <li><span class="attack-tag">ROGUE DHCP</span><span>Stand up a fake DHCP server faster than the legit one. Hand out attacker-controlled gateway and DNS — all traffic routes through you.</span></li>
+      <li><span class="attack-tag">PACKET SNIFF</span><span>On unencrypted protocols (HTTP, Telnet, FTP) — capture and read traffic in plaintext. Why HTTPS, SSH, and SFTP exist.</span></li>
+    </ul>
+    <div class="callout tip">
+      <div class="callout-label">What to Learn Next</div>
+      You're now ready to dig into: subnetting & CIDR notation, Wireshark packet analysis, firewall rules & ACLs, VLANs, and VPNs. Follow <strong>@ks3cured</strong> for more.
+    </div>
+  </section>
+
+  <footer>
+    <div class="footer-brand">@ks3cured</div>
+  </footer>
+
+</div>
+</body>
+</html>
