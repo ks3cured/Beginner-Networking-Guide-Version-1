@@ -621,9 +621,9 @@
       <li><a href="#s4">TCP vs UDP</a></li>
       <li><a href="#s5">The OSI Model</a></li>
       <li><a href="#s6">Ports & Protocols</a></li>
-      <li><a href="#s7">Router vs Modem vs Switch</a></li>
+      <li><a href="#s7">Router vs Modem</a></li>
       <li><a href="#s8">DNS — The Internet's Phone Book</a></li>
-      <li><a href="#s9">DHCP — Auto IP Assignment</a></li>
+      <li><a href="#s9">HTTP &amp; HTTPS — How the Web Talks</a></li>
       <li><a href="#s10">Why This Matters for Security</a></li>
     </ol>
   </nav>
@@ -862,33 +862,35 @@
   <!-- SECTION 7 -->
   <section id="s7">
     <div class="section-label">07 — hardware</div>
-    <h2>Router vs Modem vs Switch</h2>
-    <p>These three devices are often confused — or combined into one box by your ISP. Here's what each one actually does.</p>
-    <div class="device-grid">
-      <div class="device-card">
-        <div class="device-icon">📡</div>
-        <h4>Modem</h4>
-        <p>Connects your home to your ISP (the internet). Converts your ISP's signal (coaxial, fiber, DSL) into something your network can use. Without it, you can't reach the internet at all.</p>
+    <h2>Router vs Modem</h2>
+    <p>These two devices are constantly confused — and your ISP probably combined them into one box. Here's what each one actually does.</p>
+    <div class="compare-grid">
+      <div class="compare-card tcp">
+        <h4>📡 Modem</h4>
+        <div class="sub">Your link to the internet</div>
+        <ul>
+          <li>Connects your home to your ISP</li>
+          <li>Converts ISP signal (coax, fiber, DSL)</li>
+          <li>Without it, no internet — period</li>
+          <li>Assigned one public IP by your ISP</li>
+          <li>Operates at Layer 1 &amp; 2</li>
+        </ul>
       </div>
-      <div class="device-card">
-        <div class="device-icon">🔀</div>
-        <h4>Router</h4>
-        <p>Manages traffic between your devices and the internet. Assigns private IPs via DHCP, handles NAT, provides firewall functionality, and creates your local network. Operates at <strong>Layer 3</strong>.</p>
-      </div>
-      <div class="device-card">
-        <div class="device-icon">🔌</div>
-        <h4>Switch</h4>
-        <p>Connects multiple wired devices within the same local network. Smarter than a hub — it learns MAC addresses and sends data only to the correct device. Operates at <strong>Layer 2</strong>.</p>
-      </div>
-      <div class="device-card">
-        <div class="device-icon">📶</div>
-        <h4>Access Point (AP)</h4>
-        <p>Extends Wi-Fi coverage. Creates a wireless network and connects it back to the wired infrastructure. Often built into your home router, but can be separate in enterprise setups.</p>
+      <div class="compare-card udp">
+        <h4>🔀 Router</h4>
+        <div class="sub">Your local network manager</div>
+        <ul>
+          <li>Manages traffic between your devices</li>
+          <li>Assigns private IPs via DHCP</li>
+          <li>Handles NAT (one public IP → many devices)</li>
+          <li>Provides basic firewall functionality</li>
+          <li>Operates at Layer 3</li>
+        </ul>
       </div>
     </div>
     <div class="callout">
       <div class="callout-label">Real Talk</div>
-      Your home "router" is almost always a modem + router + switch + AP all in one box. ISPs combine them for simplicity. In enterprise networks they're always separate devices.
+      Your home "router" from your ISP is almost always a modem + router combined into one box. They bundle them for simplicity. In enterprise networks they are always separate devices.
     </div>
   </section>
 
@@ -906,14 +908,38 @@
 
   <!-- SECTION 9 -->
   <section id="s9">
-    <div class="section-label">09 — ip assignment</div>
-    <h2>DHCP — Auto IP Assignment</h2>
-    <p>Every time your phone connects to Wi-Fi, it gets an IP address automatically. That's <strong>DHCP (Dynamic Host Configuration Protocol)</strong> at work.</p>
-    <p>The process is called <strong>DORA</strong>: <strong>D</strong>iscover → <strong>O</strong>ffer → <strong>R</strong>equest → <strong>A</strong>cknowledge. Your device broadcasts "anyone have an IP for me?" — the DHCP server (usually your router) responds with an offer — your device requests it — the server confirms.</p>
-    <p>DHCP runs on <strong>port 67</strong> (server) and <strong>port 68</strong> (client). It also hands out the <strong>subnet mask</strong>, <strong>default gateway</strong>, and <strong>DNS server</strong> — everything a device needs to get online.</p>
+    <div class="section-label">09 — web protocol</div>
+    <h2>HTTP &amp; HTTPS — How the Web Talks</h2>
+    <p><strong>HTTP (HyperText Transfer Protocol)</strong> is the protocol your browser uses to request and receive web pages. Every time you visit a website, your browser sends an HTTP request and the server sends back a response.</p>
+    <p>HTTP runs on <strong>port 80</strong>. It is a simple request-response model — your browser asks for something, the server replies. Requests have a <strong>method</strong> that describes the action: <strong>GET</strong> (fetch data), <strong>POST</strong> (send data), <strong>PUT</strong> (update data), <strong>DELETE</strong> (remove data).</p>
+    <p><strong>HTTPS</strong> is HTTP with <strong>TLS (Transport Layer Security)</strong> encryption wrapped around it. It runs on <strong>port 443</strong>. The content of the request is encrypted so nobody intercepting the traffic can read it — they can see you are talking to a server, but not what you are saying.</p>
+    <div class="compare-grid">
+      <div class="compare-card tcp">
+        <h4>HTTP</h4>
+        <div class="sub">Port 80 — Unencrypted</div>
+        <ul>
+          <li>Data sent in plaintext</li>
+          <li>Anyone on the network can read it</li>
+          <li>No certificate required</li>
+          <li>Fast — no encryption overhead</li>
+          <li>Never use for sensitive data</li>
+        </ul>
+      </div>
+      <div class="compare-card udp">
+        <h4>HTTPS</h4>
+        <div class="sub">Port 443 — TLS Encrypted</div>
+        <ul>
+          <li>Data is encrypted end-to-end</li>
+          <li>Requires an SSL/TLS certificate</li>
+          <li>Protects against interception</li>
+          <li>Standard for all modern websites</li>
+          <li>Look for the padlock in your browser</li>
+        </ul>
+      </div>
+    </div>
     <div class="callout warn">
-      <div class="callout-label">Attack Surface</div>
-      A <strong>Rogue DHCP server</strong> can intercept this process and hand out fake gateway/DNS info — redirecting all your traffic through an attacker's machine. This is a man-in-the-middle technique used in internal network attacks.
+      <div class="callout-label">Security Note</div>
+      If a site is still running plain HTTP, that is a red flag. Tools like <strong>Wireshark</strong> can capture HTTP traffic and read usernames, passwords, and session cookies in plaintext. TLS is not optional — it is the baseline.
     </div>
   </section>
 
